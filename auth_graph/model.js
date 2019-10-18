@@ -37,6 +37,32 @@ AuthModel.prototype.getUserByEmail = function (email,cb) {
   this.query('SELECT * FROM users WHERE email=$1::text',[email],cb);
 }
 
+AuthModel.prototype.createUser = function (user,cb) {
+  var _this = this
+  var sql = 'INSERT INTO users (name,surname,password,email,superadmin,ldap) values ( $1,$2,md5($3),$4,$5,$6) RETURNING users_id';
+  this.query(sql,[user.name,user.surname,user.password,user.email,user.superadmin,user.ldap],function(err,data) {
+    if (err)
+      cb(err);
+    else {
+      var id = data.rows[0].users_id;
+
+      if (!user.superadmin && (!user.scopes||!user.scopes.length))
+        return cb(null,id);
+
+      var sql;
+      if (user.superadmin)
+        sql = 'select users_graph_node_op(1,$1,\'read\',\'add\')';
+      else
+        sql = 'select users_graph_node_op(id,$1,\'read\',\'add\') from users_graph where parent=1 and name in (\'' + user.scopes.join('\',\'') + '\')';
+
+      _this.query(sql,[id],function(err) {
+        if (err) cb(err);
+        else cb(null,id);
+      });
+    }
+  });
+}
+
 AuthModel.prototype.getUser = function (users_id,cb) {
   this.query('SELECT * FROM users WHERE users_id=$1::bigint',[users_id],cb);
 }

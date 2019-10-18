@@ -1,20 +1,20 @@
 // Copyright 2017 Telefónica Digital España S.L.
-// 
+//
 // This file is part of UrboCore API.
-// 
+//
 // UrboCore API is free software: you can redistribute it and/or
 // modify it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-// 
+//
 // UrboCore API is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero
 // General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Affero General Public License
 // along with UrboCore API. If not, see http://www.gnu.org/licenses/.
-// 
+//
 // For those usages not covered by this license please contact with
 // iot_support at tid dot es
 
@@ -25,12 +25,29 @@ var https = require('https');
 var http = require('http');
 var URL = require('url');
 
-exports.OAuth2 = function(client_id, client_secret, base_site, callback_url, custom_headers) {
+exports.OAuth2 = function(client_id, client_secret, type, base_site, authorize_url, access_token_url, introspect_url, user_info_url, callback_url, custom_headers) {
   this.client_id = client_id;
   this.client_secret = client_secret;
   this.base_site = base_site;
-  this.authorize_url = '/oauth2/authorize';
-  this.access_token_url = '/oauth2/token';
+  this.type = type;
+  if (type == 'fiware') {
+    this.authorize_url = '/oauth2/authorize';
+    this.access_token_url = '/oauth2/token';
+    this.introspect_url = null;
+    this.user_info_url = '/user';
+  }
+  else if (type == 'oidc') {
+    this.authorize_url = authorize_url;
+    this.access_token_url = access_token_url;
+    this.introspect_url = introspect_url;
+    this.user_info_url = user_info_url;
+  }
+  else {
+    this.authorize_url = null;
+    this.access_token_url = null;
+    this.introspect_url = null;
+    this.user_info_url = null;
+  }
   this.callback_url = callback_url;
   this.access_token_name = 'access_token';
   this.auth_method = 'Basic';
@@ -134,7 +151,7 @@ exports.OAuth2.prototype.executeRequest= function( http_library, options, post_b
   if (options.method === 'POST' && post_body) {
     request.write(post_body);
   }
-  request.end();  
+  request.end();
 }
 
 exports.OAuth2.prototype.getAuthorizeUrl= function(response_type, redirection) {
@@ -182,4 +199,36 @@ exports.OAuth2.prototype.getOAuthAccessToken= function(code, callback) {
 
 exports.OAuth2.prototype.get= function(url, access_token, callback) {
   this.request('GET', url, {}, '', access_token, callback);
+}
+
+exports.OAuth2.prototype.getUserInfo= function(access_token, callback) {
+  var post_data = 'access_token=' + access_token;
+  var post_headers= {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Content-Length': post_data.length,
+  };
+
+  this.request('POST', this.base_site+this.user_info_url, post_headers, post_data, null, function(error, data) {
+    if (error) {
+      callback(error);
+    } else {
+      callback(null, data);
+    }
+  });
+}
+
+exports.OAuth2.prototype.introspect= function(access_token, callback) {
+  var post_data = 'token=' + access_token + '&client_id=' + this.client_id + '&client_secret=' + this.client_secret;
+  var post_headers= {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Content-Length': post_data.length,
+  };
+
+  this.request('POST', this.base_site+this.introspect_url, post_headers, post_data, null, function(error, data) {
+    if (error) {
+      callback(error);
+    } else {
+      callback(null, data);
+    }
+  });
 }

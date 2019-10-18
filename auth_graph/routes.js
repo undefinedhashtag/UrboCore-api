@@ -1,20 +1,20 @@
 // Copyright 2017 Telefónica Digital España S.L.
-// 
+//
 // This file is part of UrboCore API.
-// 
+//
 // UrboCore API is free software: you can redistribute it and/or
 // modify it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-// 
+//
 // UrboCore API is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero
 // General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Affero General Public License
 // along with UrboCore API. If not, see http://www.gnu.org/licenses/.
-// 
+//
 // For those usages not covered by this license please contact with
 // iot_support at tid dot es
 
@@ -53,7 +53,12 @@ if (cfgData.auth.idm_active) {
   var oauth = new OAuth2(
     cfgData.idm.client_id,
     cfgData.idm.client_secret,
+    cfgData.idm.type,
     cfgData.idm.url,
+    cfgData.idm.authorize_url,
+    cfgData.idm.access_token_url,
+    cfgData.idm.introspect_url,
+    cfgData.idm.user_info_url,
     cfgData.idm.callback_url
   );
 }
@@ -80,17 +85,71 @@ router.get('/idm/login', function(req, res, next) {
     }
     var access_token = response1.access_token;
 
-    oauth.get(cfgData.idm.url + '/user', access_token, function (error2, response2) {
+    oauth.introspect(access_token, function (errorF, responseF){
+      if(errorF) {
+        return next(errorF);
+      }
+    });
+
+    oauth.getUserInfo(access_token, function (error2, response2) {
       if (error2) {
         return next(error2);
       }
 
       var email = JSON.parse(response2).email;
+      var roles = JSON.parse(response2).roles;
+
+      var isValidUser = true
+      var isAdmin = false
+
+      if (cfgData.idm.user_role || cfgData.idm.admin_role) {
+        if(!roles.includes(cfgData.idm.user_role)) {
+          isValidUser = false
+        }
+        if(roles.includes(cfgData.idm.admin_role)) {
+          isValidUser = true
+          isAdmin = true
+        }
+      }
+
+      if (!isValidUser) {
+        return next(check.invalidUserPassword());
+      }
 
       var m = new Model();
       m.getUserByEmail(email, function (error3, response3) {
-        if (error3 || !response3.rows.length)
-          return next(check.invalidUserPassword());
+        if (error3 || !response3.rows.length) {
+          if (cfgData.idm.user_role || cfgData.idm.admin_role) {
+            var newUser = {
+              name: email,
+              surname: email,
+              password: Math.random().toString(36).slice(-11),
+              email: email,
+              superadmin: isAdmin,
+              ldap: false
+            }
+            m.createUser(newUser, function (errorU, newUserId) {
+              if (errorU) {
+                return next(errorU);
+              }
+              newUser.id = newUserId;
+              delete newUser.password;
+
+              common.insertJwtToken(newUser, req.app.get('jwtTokenExpiration'), req.app.get('jwtTokenSecret'), function (error4, response4) {
+                if (error4)
+                  return next(error4);
+
+                res.redirect(url.format({
+                  pathname: req.query.state,
+                  query: {'token': response4.token, 'expires' : response4.expires}
+                }));
+              });
+            })
+          }
+          else {
+            return next(check.invalidUserPassword());
+          }
+        }
 
         if (response3 && response3.rows && response3.rows.length) {
 
