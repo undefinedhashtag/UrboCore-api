@@ -44,8 +44,8 @@
 \ir common/urbo_multiscope_childs_usergraph.sql
 
 -- Carto
--- CARTO \ir carto/urbo_compute_geodesic_lines.sql
--- CARTO \ir carto/urbo_get_user_tables.sql
+\ir carto/urbo_compute_geodesic_lines.sql
+\ir carto/urbo_get_user_tables.sql
 
 -- DDL
 \ir common/ddl/urbo_categories_ddl.sql

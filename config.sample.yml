@@ -118,9 +118,21 @@ categories:
 carto:
   - user: mycartouser
     api_key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    url: carto.com
     default: true
+    https: true
+    subdomainlessUrls: false
+    active: true
+    # Optional. Default to false. If you've an enterprise account at CartoDB you must set this param to true
+    enterprise: false
   - user: mycartouser02
     api_key: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    url: carto.com
+    https: true
+    subdomainlessUrls: false
+    active: true
+    # Optional. Default to false. If you've an enterprise account at CartoDB you must set this param to true
+    enterprise: false
 
 # Guadalajara MicroStrategy API parameteres
 microstrategy:
