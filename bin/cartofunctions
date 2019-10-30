@@ -131,10 +131,20 @@ function loadIntoAccount(i) {
   log.info('============================================');
   log.info('Uploading functions for user ' + account.user);
   log.info('============================================');
+  var http = account.https ? 'https' : 'http';
+  var cartoUrl = '';
+  if (account.url && account.subdomainlessUrls){
+    cartoUrl = http + '://' + account.url + '/user/' + account.user;
+  } else if (account.url && !account.subdomainlessUrls) {
+    cartoUrl = http + '://' + account.user + '.' + account.url;
+  } else {
+    cartoUrl = 'https://' + account.user+ '.carto.com'
+  }
+  log.info('Connecting to ' + cartoUrl);
   var sql = new Carto.SQL({
     user: account.user,
     api_key: account.api_key,
-    sql_api_url: 'https://' + account.user + '.carto.com/api/v2/sql'
+    sql_api_url: cartoUrl + '/api/v2/sql'
   });
 
   if (account.user === 'undefined') {  // The wildcard invalid user
