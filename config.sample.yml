@@ -102,6 +102,14 @@ test:
     - email: admin@domain.gs
       password: invent_pass
 
+quantumleap:
+  url: https://quantumleap.wolfsburg.digital
+  fiwareService: wolfsburg
+  fiwareServicePath: /WasteManagement
+
+google:
+  apiKey: xxxxxxxxxxxxxxxxxxxx
+
 categories:
   - id: dumps
     carto:
