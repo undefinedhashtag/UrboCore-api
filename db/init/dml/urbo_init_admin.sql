@@ -36,4 +36,4 @@ VALUES
 INSERT INTO public.users
 (name,    surname,   email,               password,           superadmin)
 VALUES
-('guest', 'guest',   :'guest@guest.com',      md5(:'guest'),  TRUE      );
+('guest', 'guest',   :'guest_email',      md5(:'guest_pwd'),  TRUE      );
