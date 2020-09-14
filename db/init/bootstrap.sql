@@ -31,7 +31,8 @@
 -- API login for the superuser
 \set admin_email `echo "${URBO_ADMIN_EMAIL:-example@geographica.gs}"`
 \set admin_pwd `echo "${URBO_ADMIN_PASSWD:-admin}"`
-
+\set guest_email `echo "${URBO_GUEST_EMAIL:-guest@guest.com}"`
+\set guest_pwd `echo "${URBO_GUEST_PASSWD:-guest}"`
 ---------------------------------------
 
 -- Database initialization
