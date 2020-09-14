@@ -31,3 +31,9 @@ INSERT INTO public.users_graph
 (id,  name,     parent,   read_users,   write_users)
 VALUES
 (1,   'root',   NULL,     '{1}',        '{1}');
+
+-- Adding API superadmin
+INSERT INTO public.users
+(name,    surname,   email,               password,           superadmin)
+VALUES
+('guest', 'guest',   :'guest@guest.com',      md5(:'guest'),  TRUE      );
