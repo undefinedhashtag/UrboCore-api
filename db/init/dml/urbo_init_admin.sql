@@ -32,7 +32,7 @@ INSERT INTO public.users_graph
 VALUES
 (1,   'root',   NULL,     '{1}',        '{1}');
 
--- Adding API superadmin
+-- Adding guest user
 INSERT INTO public.users
 (name,    surname,   email,               password,           superadmin)
 VALUES
